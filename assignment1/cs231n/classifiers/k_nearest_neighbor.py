@@ -125,11 +125,13 @@ class KNearestNeighbor(object):
     #########################################################################
     a2 = np.sum(np.square(X), axis=1); b2 = np.sum(np.square(self.X_train), axis=1); 
     ab = X.dot(self.X_train.T)
-    dists = np.sqrt(-2*ab + np.matrix(a2).T + b2)
+    # dists = np.sqrt(-2*ab + np.matrix(a2).T + b2)
+    dists = np.sqrt(((-2*ab).T + a2).T + b2) # Trying to avoid using matrix
     #########################################################################
     #                         END OF YOUR CODE                              #
     #########################################################################
-    return np.array(dists)
+    # return np.array(dists)
+    return dists # Do not need to convert back to np.arrray if the use of matrix is avoided.
 
   def predict_labels(self, dists, k=1):
     """
