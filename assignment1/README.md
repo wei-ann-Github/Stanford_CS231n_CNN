@@ -16,3 +16,8 @@ For the exercise on SVM:
 * Wrote the LinearSVM.predict function in cs231n/classifiers/linear\_classifier.py
 
 **Note** There seem to be a mistake in the docstring of linear_classifier.py (line 50) that states that X_batch should have shape (dim, batch_size). However, this dimension is inconsistent in the implementation of the svm_loss function in cs231n/classifiers/linear\_svm.py when X has the shape (n_data, dim). (dim, batch_size) is also inconsistent with the doc string in line 89 of the _predict_ function and line 115 of the _loss_ function in linear_classifier.py . Hence, I have stuck to X_batch with shape = (batch_size, dim).
+
+For the exercise on softmax:
+* Implemented the naive softmax loss function with nested loops in cs231n/classifiers/softmax.py
+* Implemented the vectorized softmax loss function in cs231n/classifiers/softmax.py
+* Fine tuned the linear model using softmax loss function by experimenting with different regularization strength and different learning rate.

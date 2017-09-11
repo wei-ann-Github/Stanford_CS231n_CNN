@@ -30,7 +30,22 @@ def softmax_loss_naive(W, X, y, reg):
   # here, it is easy to run into numeric instability. Don't forget the        #
   # regularization!                                                           #
   #############################################################################
-  pass
+  num_train = X.shape[0]; num_class = W.shape[1];
+  for i in range(num_train):
+        score_i = np.exp(X[i].dot(W))
+        score_correct_class = score_i[y[i]];
+        total_score = np.sum(score_i)
+        loss -= np.log(score_correct_class/total_score)
+        for j in range(num_class):
+            dW[:,j] += score_i[j]/total_score*X[i]
+            if j == y[i]:
+                dW[:,j] -= X[i]
+  dW /= num_train
+  loss /= num_train
+    
+  # regularization
+  dW += 2*reg*W
+  loss += reg*np.sum(W**2)
   #############################################################################
   #                          END OF YOUR CODE                                 #
   #############################################################################
@@ -54,7 +69,19 @@ def softmax_loss_vectorized(W, X, y, reg):
   # here, it is easy to run into numeric instability. Don't forget the        #
   # regularization!                                                           #
   #############################################################################
-  pass
+  indicator = np.eye(W.shape[1])[y] # shape = (N, C)
+  scores = np.exp(X.dot(W)) # shape = (N, C)
+  total_score = np.sum(scores, axis=1) # shape = like (1, N)
+  correct_class_score = scores * indicator # shape = (N, C)
+  
+  # loss + regularization (don't forget to log p)
+  loss = np.mean(-np.log(np.sum(correct_class_score, axis=1)/total_score))
+  loss += reg * np.sum(W**2) 
+
+  # dW + derivative of regularization
+  dW = X.T.dot(scores/total_score.reshape(scores.shape[0], 1)) - X.T.dot(indicator)
+  dW /= X.shape[0]
+  dW += 2*reg*W
   #############################################################################
   #                          END OF YOUR CODE                                 #
   #############################################################################
