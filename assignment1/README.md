@@ -21,3 +21,7 @@ For the exercise on softmax:
 * Implemented the naive softmax loss function with nested loops in cs231n/classifiers/softmax.py
 * Implemented the vectorized softmax loss function in cs231n/classifiers/softmax.py
 * Fine tuned the linear model using softmax loss function by experimenting with different regularization strength and different learning rate.
+
+For the exercise on 2_layer_net:
+* Computed the score for a 2 layer net with a relu non-linearity after the first hidden layer.
+* Computed the loss with L2 regularization loss in this 2 layer net.
