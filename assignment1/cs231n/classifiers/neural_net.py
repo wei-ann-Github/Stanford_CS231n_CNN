@@ -113,7 +113,24 @@ class TwoLayerNet(object):
     # and biases. Store the results in the grads dictionary. For example,       #
     # grads['W1'] should store the gradient on W1, and be a matrix of same size #
     #############################################################################
-    pass
+    grads['W2'] = relu.T.dot(exp_scores/np.sum(exp_scores, axis=1).reshape(exp_scores.shape[0], 1)) - relu.T.dot(indicator)
+    grads['W2'] /= X.shape[0]
+    grads['W2'] += 2*reg*W2 # shape = (hidden_size, output_size)
+    grads['b2'] 
+    # Whether W1 has a grad, it is dependent on the relu and X.
+    # if relu = 0, the grad = 0, else grad = *1
+    # relu.shape = (N, hidden_size)
+    # X.shape = (N, D)
+    # dW1.shape = (D, hidden_size)
+    dW2_dW1 = X
+    
+    W2 = 
+    
+    d_relu = np.array(relu > 0, dtype=int)
+    X.dot(grads['W2'])
+    # W1 --> relu --> W2
+    # dJ,dW1 = dJ,dW2 * dW2,dW1
+    #grads['W1'] += 2*reg*W1
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
