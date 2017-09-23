@@ -19,7 +19,7 @@ class TwoLayerNet(object):
   The outputs of the second fully-connected layer are the scores for each class.
   """
 
-  def __init__(self, input_size, hidden_size, output_size, std=1e-4):
+  def __init__(self, input_size, hidden_size, output_size, std=1e-4, weight_init=None):
     """
     Initialize the model. Weights are initialized to small random values and
     biases are initialized to zero. Weights and biases are stored in the
@@ -40,6 +40,11 @@ class TwoLayerNet(object):
     self.params['b1'] = np.zeros(hidden_size)
     self.params['W2'] = std * np.random.randn(hidden_size, output_size)
     self.params['b2'] = np.zeros(output_size)
+    
+    # how about using Xavier initialization?
+    if weight_init=='Xavier':
+        self.params['W1'] = np.random.randn(input_size, hidden_size)/np.sqrt(input_size)
+        self.params['W2'] = np.random.randn(hidden_size, output_size)/np.sqrt(hidden_size)
 
   def loss(self, X, y=None, reg=0.0):
     """
@@ -113,13 +118,6 @@ class TwoLayerNet(object):
     # and biases. Store the results in the grads dictionary. For example,       #
     # grads['W1'] should store the gradient on W1, and be a matrix of same size #
     #############################################################################
-    # computation graph showing the shape of the output
-    # X*W1 +b1 = z1 (shape = (N, hidden_size)) 
-    # --> relu(z1) = a1 (shape = (N, hidden_size)) 
-    # --> a1 * W2 + b2 = z2 (shape = (N, output_size))
-    # --> e^z2 (shape = (N, output_size)) 
-    # --> softmax_loss(e^z2) = y (shape = (N, 1))
-    
     dZ2 = exp_scores/np.sum(exp_scores, axis=1, keepdims=True) - indicator
     grads['W2'] = a1.T.dot(dZ2)
     grads['W2'] /= X.shape[0]
@@ -141,8 +139,8 @@ class TwoLayerNet(object):
 
   def train(self, X, y, X_val, y_val,
             learning_rate=1e-3, learning_rate_decay=0.95,
-            reg=5e-6, num_iters=100,
-            batch_size=200, verbose=False):
+            reg=5e-6, num_iters=100, batch_size=200,
+            verbose=False):
     """
     Train this neural network using stochastic gradient descent.
 
@@ -167,7 +165,7 @@ class TwoLayerNet(object):
     loss_history = []
     train_acc_history = []
     val_acc_history = []
-
+    
     for it in range(num_iters):
       X_batch = None
       y_batch = None
@@ -187,7 +185,7 @@ class TwoLayerNet(object):
       # Compute loss and gradients using the current minibatch
       loss, grads = self.loss(X_batch, y=y_batch, reg=reg)
       loss_history.append(loss)
-
+      
       #########################################################################
       # TODO: Use the gradients in the grads dictionary to update the         #
       # parameters of the network (stored in the dictionary self.params)      #
@@ -204,6 +202,9 @@ class TwoLayerNet(object):
 
       if verbose and it % 100 == 0:
         print('iteration %d / %d: loss %f' % (it, num_iters, loss))
+        if it > 0 and (loss_history[0] - loss)/loss_history[0] < 0.01:
+            print("Training is too slow.")
+            break
 
       # Every epoch, check train and val accuracy and decay learning rate.
       if it % iterations_per_epoch == 0:
@@ -215,7 +216,7 @@ class TwoLayerNet(object):
 
         # Decay learning rate
         learning_rate *= learning_rate_decay
-
+    
     return {
       'loss_history': loss_history,
       'train_acc_history': train_acc_history,

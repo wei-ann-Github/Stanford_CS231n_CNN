@@ -24,4 +24,8 @@ This assignment consists of 5 exercises.
 
 **For the exercise on 2_layer_net**:
 * Computed the score for a 2 layer net with a relu non-linearity after the first hidden layer.
-* Computed the loss with L2 regularization loss in this 2 layer net.
+* Computed the loss with L2 regularization in this 2 layer net.
+* Implement backprop and calculation of gradients of parameters, W and bias term, as well as the gradients of the activation functions.
+* Tune the hyperparameters and train the 2 layer net on the CIFAR10 dataset.
+* Visualized the weights in each each layer of the neural net.
+* Implemented my own visualization in cs231n/vis\_utils.py to help decide on the hyperparameters.
