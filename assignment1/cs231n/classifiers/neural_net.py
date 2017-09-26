@@ -3,6 +3,7 @@ from __future__ import print_function
 import numpy as np
 import matplotlib.pyplot as plt
 #from past.builtins import xrange
+import math
 
 class TwoLayerNet(object):
   """
@@ -40,11 +41,6 @@ class TwoLayerNet(object):
     self.params['b1'] = np.zeros(hidden_size)
     self.params['W2'] = std * np.random.randn(hidden_size, output_size)
     self.params['b2'] = np.zeros(output_size)
-    
-    # how about using Xavier initialization?
-    if weight_init=='Xavier':
-        self.params['W1'] = np.random.randn(input_size, hidden_size)/np.sqrt(input_size)
-        self.params['W2'] = np.random.randn(hidden_size, output_size)/np.sqrt(hidden_size)
 
   def loss(self, X, y=None, reg=0.0):
     """
@@ -185,6 +181,9 @@ class TwoLayerNet(object):
       # Compute loss and gradients using the current minibatch
       loss, grads = self.loss(X_batch, y=y_batch, reg=reg)
       loss_history.append(loss)
+      if math.isnan(loss):
+        print('loss is too large')
+        break
       
       #########################################################################
       # TODO: Use the gradients in the grads dictionary to update the         #
@@ -202,9 +201,6 @@ class TwoLayerNet(object):
 
       if verbose and it % 100 == 0:
         print('iteration %d / %d: loss %f' % (it, num_iters, loss))
-        if it > 0 and (loss_history[0] - loss)/loss_history[0] < 0.01:
-            print("Training is too slow.")
-            break
 
       # Every epoch, check train and val accuracy and decay learning rate.
       if it % iterations_per_epoch == 0:
