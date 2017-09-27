@@ -30,5 +30,5 @@ This assignment consists of 5 exercises.
 * Visualized the weights in each each layer of the neural net.
 * Implemented my own visualization in cs231n/vis\_utils.py to help decide on the hyperparameters.
 
-**Exercise on features.ipynb**
+**Exercise on features.ipynb**:
 * Using engineered features (Histogram of Oriented Gradients, colour histogram using the hue channel in HSV colour space), trained the SVM and 2_layer_net model implemented in previous exercise. The result is a significant improvement in test accuracy on both the SVM model and the 2 layer net model.
