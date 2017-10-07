@@ -2,6 +2,6 @@ Instructions for assignment 2 can be found [here](https://github.com/wei-ann-Git
 
 This assignment consists of 5 exercises:
 
-Exercise on implementing a fully connected network of any length:
+**Exercise on implementing a fully connected network of any length**:
 * Implemented the forward pass of an L layer deep nueral network.
 * Implemented the backward pass of an L layer deep nueral network.

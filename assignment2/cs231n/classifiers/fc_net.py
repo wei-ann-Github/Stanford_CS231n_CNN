@@ -237,7 +237,12 @@ class FullyConnectedNet(object):
         # self.bn_params[1] to the forward pass for the second batch normalization #
         # layer, etc.                                                              #
         ############################################################################
-        pass
+        out = X;
+        caches = []
+        for l in range(1, self.num_layers):
+            out, cache = affine_relu_forward(out, self.params['W'+str(l)], self.params['b'+str(l)]);
+            caches.append(cache);
+        scores = np.exp(out.dot(self.params['W'+str(self.num_layers)]) + self.params['b'+str(self.num_layers)])
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
@@ -260,7 +265,15 @@ class FullyConnectedNet(object):
         # automated tests, make sure that your L2 regularization includes a factor #
         # of 0.5 to simplify the expression for the gradient.                      #
         ############################################################################
-        pass
+        loss = softmax_loss(scores, y)
+        
+        #correct_class_score = np.choose(y, scores.T)
+        #total_scores = np.sum(scores, axis=1)
+        #loss, dscore = np.mean(-np.log(correct_class_score / total_scores))
+        
+        for l in range(1, self.num_layers):
+            loss += self.reg*(np.sum(self.params['W'+str(l)]**2))
+        loss += self.reg*(np.sum(self.params['W'+str(self.num_layers)]**2))
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################

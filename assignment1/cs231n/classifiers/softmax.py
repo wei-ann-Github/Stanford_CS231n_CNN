@@ -72,10 +72,11 @@ def softmax_loss_vectorized(W, X, y, reg):
   indicator = np.eye(W.shape[1])[y] # shape = (N, C)
   scores = np.exp(X.dot(W)) # shape = (N, C)
   total_score = np.sum(scores, axis=1) # shape = like (1, N)
-  correct_class_score = scores * indicator # shape = (N, C)
-  
+  # correct_class_score = scores * indicator # shape = (N, C) # replaced by np.choose
+  correct_class_score = np.choose(y, scores.T) # shape = (1, N)
   # loss + regularization (don't forget to log p)
-  loss = np.mean(-np.log(np.sum(correct_class_score, axis=1)/total_score))
+  # loss = np.mean(-np.log(np.sum(correct_class_score, axis=1)/total_score))
+  loss = np.mean(-np.log(correct_class_score/total_score))
   loss += reg * np.sum(W**2) 
 
   # dW + derivative of regularization
