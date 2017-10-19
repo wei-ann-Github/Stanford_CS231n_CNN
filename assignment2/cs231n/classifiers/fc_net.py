@@ -272,6 +272,8 @@ class FullyConnectedNet(object):
         grads['W'+str(self.num_layers)] += self.reg*self.params['W' + str(self.num_layers)]
         for l in range(self.num_layers-1, 0, -1):
             loss += 0.5*self.reg*np.sum(self.params['W'+str(l)]**2)
+            dout, grads['W'+str(l)], grads['b'+str(l)] = affine_relu_backward(dout, caches[l])
+            grads['W'+str(l)] += self.reg*self.params['W'+str(l)]
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
