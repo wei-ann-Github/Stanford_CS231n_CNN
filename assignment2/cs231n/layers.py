@@ -60,8 +60,8 @@ def affine_backward(dout, cache):
     dx = dx_flat.reshape(x.shape);
     
     x_flat = x.reshape(x.shape[0], -1);
-    dw = x_flat.T.dot(dout) # noticed that now, there is no division by N, the number of examples in the minibatch
-    db = np.sum(dout, axis=0) # noticed that now, there is no division by N, the number of examples in the minibatch
+    dw = x_flat.T.dot(dout)
+    db = np.sum(dout, axis=0)
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -176,7 +176,16 @@ def batchnorm_forward(x, gamma, beta, bn_param):
         # variance, storing your result in the running_mean and running_var   #
         # variables.                                                          #
         #######################################################################
-        pass
+        sample_mean = np.mean(x, axis=0, keepdims=True);
+        running_mean = momentum * running_mean + (1 - momentum) * sample_mean
+        sample_var = np.var(x, axis=0, keepdims=True);
+        running_var = momentum * running_var + (1 - momentum) * sample_var
+        xmu = x - sample_mean
+        sqrt_var = np.sqrt(sample_var + eps)
+        ivar = 1 / sqrt_var
+        x_norm = xmu * ivar;
+        out = x_norm * gamma + beta
+        cache = (x_norm, gamma, xmu, ivar, sqrt_var, sample_mean, sample_var, eps)
         #######################################################################
         #                           END OF YOUR CODE                          #
         #######################################################################
@@ -187,7 +196,8 @@ def batchnorm_forward(x, gamma, beta, bn_param):
         # then scale and shift the normalized data using gamma and beta.      #
         # Store the result in the out variable.                               #
         #######################################################################
-        pass
+        x_norm = (x - running_mean)/np.sqrt(running_var + eps)
+        out = x_norm * gamma + beta
         #######################################################################
         #                          END OF YOUR CODE                           #
         #######################################################################
@@ -223,7 +233,18 @@ def batchnorm_backward(dout, cache):
     # TODO: Implement the backward pass for batch normalization. Store the    #
     # results in the dx, dgamma, and dbeta variables.                         #
     ###########################################################################
-    pass
+    x_norm, gamma, xmu, ivar, sqrt_var, sample_mean, sample_var, eps = cache
+    
+    dgamma = np.sum(dout * x_norm, axis=0)
+    dbeta = np.sum(dout, axis=0)
+    
+    # Referenced from http://kratzert.github.io/2016/02/12/understanding-the-gradient-flow-through-the-batch-normalization-layer.html
+    N = dout.shape[0]
+    dx_norm = gamma * dout
+    dvar = np.sum(xmu*dx_norm, axis=0, keepdims=True)*(-1)*sqrt_var**(-2)*0.5*sqrt_var**(-0.5)
+    dxmu = dx_norm * ivar + dvar/N * 2 * xmu
+    dsample_mean = np.sum(dxmu, axis=0, keepdims=True) * (-1) / N
+    dx = dxmu + dsample_mean
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################

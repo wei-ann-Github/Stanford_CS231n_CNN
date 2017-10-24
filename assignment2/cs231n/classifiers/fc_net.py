@@ -5,7 +5,34 @@ import numpy as np
 from cs231n.layers import *
 from cs231n.layer_utils import *
 
+def affine_bn_relu_forward(x, w, b, gamma, beta, bn_param):
+    """
+    Convenience layer that perorms an affine transform followed by a ReLU
 
+    Inputs:
+    - x: Input to the affine layer
+    - w, b: Weights for the affine layer
+
+    Returns a tuple of:
+    - out: Output from the ReLU
+    - cache: Object to give to the backward pass
+    """
+    a, fc_cache = affine_forward(x, w, b)
+    bn, bn_cache = batchnorm_forward(a, gamma, beta, bn_param)
+    out, relu_cache = relu_forward(bn)
+    cache = (fc_cache, bn_cache, relu_cache)
+    return out, cache
+
+def affine_bn_relu_backward(dout, cache):
+    """
+    Backward pass for the affine-bn-relu convenience layer
+    """
+    fc_cache, bn_cache, relu_cache = cache
+    da = relu_backward(dout, relu_cache)
+    dbn, dgamma, dbeta = batchnorm_backward(da, bn_cache)
+    dx, dw, db = affine_backward(dbn, fc_cache)
+    return dx, dw, db, dgamma, dbeta
+    
 class TwoLayerNet(object):
     """
     A two-layer fully-connected neural network with ReLU nonlinearity and
@@ -178,11 +205,26 @@ class FullyConnectedNet(object):
         ############################################################################
         self.params['W'+str(1)] = np.random.randn(input_dim, hidden_dims[0]) * weight_scale
         self.params['b'+str(1)] = np.zeros((1, hidden_dims[0]))
+        
+        # batchnorm is after the affine operations
+        if self.use_batchnorm:
+            self.params['gamma'+str(1)] = np.ones((1, hidden_dims[0]))
+            self.params['beta'+str(1)] = np.zeros((1, hidden_dims[0]))
+            
         for l, hidden_dim in enumerate(hidden_dims[1:], 2):
             self.params['W'+str(l)] = np.random.randn(hidden_dims[l-2], hidden_dim) * weight_scale
             self.params['b'+str(l)] = np.zeros((1, hidden_dim))
+            
+            # batchnorm in layers 2 onwards.
+            if self.use_batchnorm:
+                self.params['gamma'+str(l)] = np.ones((1, hidden_dim))
+                self.params['beta'+str(l)] = np.zeros((1, hidden_dim))
+
+        # weights initialization in the final layer (the output layer)
         self.params['W'+str(self.num_layers)] = np.random.randn(hidden_dims[-1], num_classes) * weight_scale
         self.params['b'+str(self.num_layers)] = np.zeros((1, num_classes))
+        # there is no batchnorm required in the final layer. 
+            
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
@@ -208,7 +250,6 @@ class FullyConnectedNet(object):
         # Cast all parameters to the correct datatype
         for k, v in self.params.items():
             self.params[k] = v.astype(dtype)
-
 
     def loss(self, X, y=None):
         """
@@ -240,10 +281,17 @@ class FullyConnectedNet(object):
         # self.bn_params[1] to the forward pass for the second batch normalization #
         # layer, etc.                                                              #
         ############################################################################
-        out = X; caches = {}
-        for l in range(1, self.num_layers):
-            out, caches[l] = affine_relu_forward(out, self.params['W'+str(l)], self.params['b'+str(l)])    
+        out = X; caches = {};
+        for l in range(1, self.num_layers):                
+            # batchnorm only in the hidden layers.
+            if self.use_batchnorm:
+                out, caches[l] = affine_bn_relu_forward(out, self.params['W'+str(l)], self.params['b'+str(l)]
+                                                        , self.params['gamma'+str(l)], self.params['beta'+str(l)], self.bn_params[l-1])
+            else:
+                out, caches[l] = affine_relu_forward(out, self.params['W'+str(l)], self.params['b'+str(l)])
+            
         scores, caches[self.num_layers] = affine_forward(out, self.params['W'+str(self.num_layers)], self.params['b'+str(self.num_layers)])
+        
         ############################################################################r
         #                             END OF YOUR CODE                             #
         ############################################################################
@@ -267,13 +315,22 @@ class FullyConnectedNet(object):
         # of 0.5 to simplify the expression for the gradient.                      #
         ############################################################################
         loss, dscores = softmax_loss(scores, y)
-        loss += 0.5*self.reg*np.sum(self.params['W'+str(self.num_layers)]**2)
+        loss += 0.5*self.reg*np.sum(self.params['W'+str(self.num_layers)]**2)              
         dout, grads['W'+str(self.num_layers)], grads['b'+str(self.num_layers)] = affine_backward(dscores, caches[self.num_layers])
+        # taking into account regularization
         grads['W'+str(self.num_layers)] += self.reg*self.params['W' + str(self.num_layers)]
+            
         for l in range(self.num_layers-1, 0, -1):
             loss += 0.5*self.reg*np.sum(self.params['W'+str(l)]**2)
-            dout, grads['W'+str(l)], grads['b'+str(l)] = affine_relu_backward(dout, caches[l])
+            
+            # batchnorm comes first before the hidden layers.
+            if self.use_batchnorm:
+                dout, grads['W'+str(l)], grads['b'+str(l)], grads['gamma'+str(l)], grads['beta'+str(l)] = affine_bn_relu_backward(dout, caches[l])
+            else:
+                dout, grads['W'+str(l)], grads['b'+str(l)] = affine_relu_backward(dout, caches[l])
+            # taking into acocunt regularization
             grads['W'+str(l)] += self.reg*self.params['W'+str(l)]
+            
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
