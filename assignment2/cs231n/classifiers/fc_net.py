@@ -328,7 +328,8 @@ class FullyConnectedNet(object):
                 dout, grads['W'+str(l)], grads['b'+str(l)], grads['gamma'+str(l)], grads['beta'+str(l)] = affine_bn_relu_backward(dout, caches[l])
             else:
                 dout, grads['W'+str(l)], grads['b'+str(l)] = affine_relu_backward(dout, caches[l])
-            # taking into acocunt regularization
+                
+            # taking into account regularization
             grads['W'+str(l)] += self.reg*self.params['W'+str(l)]
             
         ############################################################################
