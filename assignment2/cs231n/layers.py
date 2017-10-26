@@ -279,7 +279,16 @@ def batchnorm_backward_alt(dout, cache):
     # should be able to compute gradients with respect to the inputs in a     #
     # single statement; our implementation fits on a single 80-character line.#
     ###########################################################################
-    pass
+    x_norm, gamma, xmu, ivar, sqrt_var, sample_var, eps = cache
+    
+    dgamma = np.sum(dout*x_norm, axis=0)
+    dbeta = np.sum(dout, axis=0)
+    
+    # simplifying the calculations from batchnorm_backward() above
+    dx_norm = gamma * dout
+    dxmu = (dx_norm - np.mean(dx_norm*xmu, axis=0)*xmu/(sample_var+eps)) *ivar
+    dsample_mean = - np.mean(dxmu, axis=0, keepdims=True)
+    dx = dxmu + dsample_mean
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -318,7 +327,8 @@ def dropout_forward(x, dropout_param):
         # TODO: Implement training phase forward pass for inverted dropout.   #
         # Store the dropout mask in the mask variable.                        #
         #######################################################################
-        pass
+        mask = (np.random.rand(*x.shape) <= p) / p
+        out = x * mask;
         #######################################################################
         #                           END OF YOUR CODE                          #
         #######################################################################
@@ -326,7 +336,7 @@ def dropout_forward(x, dropout_param):
         #######################################################################
         # TODO: Implement the test phase forward pass for inverted dropout.   #
         #######################################################################
-        pass
+        out = x
         #######################################################################
         #                            END OF YOUR CODE                         #
         #######################################################################
@@ -353,7 +363,7 @@ def dropout_backward(dout, cache):
         #######################################################################
         # TODO: Implement training phase backward pass for inverted dropout   #
         #######################################################################
-        pass
+        dx = mask * dout
         #######################################################################
         #                          END OF YOUR CODE                           #
         #######################################################################

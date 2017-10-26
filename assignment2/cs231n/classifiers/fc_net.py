@@ -29,7 +29,7 @@ def affine_bn_relu_backward(dout, cache):
     """
     fc_cache, bn_cache, relu_cache = cache
     da = relu_backward(dout, relu_cache)
-    dbn, dgamma, dbeta = batchnorm_backward(da, bn_cache)
+    dbn, dgamma, dbeta = batchnorm_backward_alt(da, bn_cache)
     dx, dw, db = affine_backward(dbn, fc_cache)
     return dx, dw, db, dgamma, dbeta
     
@@ -281,14 +281,18 @@ class FullyConnectedNet(object):
         # self.bn_params[1] to the forward pass for the second batch normalization #
         # layer, etc.                                                              #
         ############################################################################
-        out = X; caches = {};
+        out = X; caches = {}; dropout_caches = {}
         for l in range(1, self.num_layers):                
-            # batchnorm only in the hidden layers.
+            # batchnorm only in the hidden layers. And it comes after affine and before relu
             if self.use_batchnorm:
                 out, caches[l] = affine_bn_relu_forward(out, self.params['W'+str(l)], self.params['b'+str(l)]
                                                         , self.params['gamma'+str(l)], self.params['beta'+str(l)], self.bn_params[l-1])
             else:
                 out, caches[l] = affine_relu_forward(out, self.params['W'+str(l)], self.params['b'+str(l)])
+                
+            # dropout comes after relu.
+            if self.use_dropout:
+                out, dropout_caches[l] = dropout_forward(out, self.dropout_param)
             
         scores, caches[self.num_layers] = affine_forward(out, self.params['W'+str(self.num_layers)], self.params['b'+str(self.num_layers)])
         
@@ -323,7 +327,11 @@ class FullyConnectedNet(object):
         for l in range(self.num_layers-1, 0, -1):
             loss += 0.5*self.reg*np.sum(self.params['W'+str(l)]**2)
             
-            # batchnorm comes first before the hidden layers.
+            # In the backward pass, dropout comes first before relu
+            if self.use_dropout:
+                dout = dropout_backward(dout, dropout_caches[l])
+            
+            # In the backward pass, relu-->batchnorm-->affine
             if self.use_batchnorm:
                 dout, grads['W'+str(l)], grads['b'+str(l)], grads['gamma'+str(l)], grads['beta'+str(l)] = affine_bn_relu_backward(dout, caches[l])
             else:
