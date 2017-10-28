@@ -503,12 +503,13 @@ def max_pool_forward_naive(x, pool_param):
     pool_height = pool_param['pool_height']; pool_width = pool_param['pool_width'];
     stride = pool_param['stride']
     
-    out = np.zeros((N, C, int(H/pool_height), int(W/pool_width)))
+    out = np.zeros((N, C, int((H-pool_height)/stride+1), int((W-pool_width)/stride+1)))
     for n in range(N):
         for c in range(C):
             for i in range(out.shape[-2]):
                 for j in range(out.shape[-1]):
-                    out[n, c, i, j] = np.max(x[n, c, i*stride:i*stride+pool_height, j*stride:j*stride+pool_width])
+                    out[n, c, i, j] = np.max(x[n, c, i*stride:i*stride+pool_height
+                                               , j*stride:j*stride+pool_width])
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -537,7 +538,16 @@ def max_pool_backward_naive(dout, cache):
     # Some dimensions
     pool_height = pool_param['pool_height']; pool_width = pool_param['pool_width']
     stride = pool_param['stride']
-    N, F, HH, WW = dout.shape
+    N, C, HH, WW = dout.shape
+    
+    # Find the max in each group of 4 cells.
+    for n in range(N):
+        for c in range(C):
+            for i in range(HH):
+                for j in range(WW):
+                    max_ind = np.argmax(x[n, c, i*stride:i*stride+pool_height, j*stride:j*stride+pool_width])
+                    row, col = int(max_ind/pool_width), max_ind%pool_width
+                    dx[n, c, i*stride+row, j*stride+col] += dout[n, c, i, j]
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
