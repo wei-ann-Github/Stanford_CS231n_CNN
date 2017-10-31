@@ -1,0 +1,3 @@
+# Upload data into cs231n_cifar10 onto floydhub
+floyd data init cs231n_cifar10
+floyd data upload
