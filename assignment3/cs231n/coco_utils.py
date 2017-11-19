@@ -3,7 +3,9 @@ import os, json
 import numpy as np
 import h5py
 
-BASE_DIR = 'cs231n/datasets/coco_captioning'
+# BASE_DIR = 'cs231n/datasets/coco_captioning'
+# BASE_DIR = '../../Stanford_CS231n_CNN_assignment3_data/coco_captioning' # I stored the dataset some where else.
+BASE_DIR = '/coco_captioning' # for floydhub
 
 def load_coco_data(base_dir=BASE_DIR,
                    max_train=None,

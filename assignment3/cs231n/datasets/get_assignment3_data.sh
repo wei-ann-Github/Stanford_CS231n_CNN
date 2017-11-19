@@ -1,5 +1,7 @@
 #!/bin/bash
-./get_coco_captioning.sh
-./get_squeezenet_tf.sh
-./get_imagenet_val.sh
+
+bash get_coco_captioning.sh
+
+bash get_squeezenet_tf.sh
+bash get_imagenet_val.sh
 
