@@ -122,7 +122,7 @@ class CaptioningRNN(object):
         # (1) Use an affine transformation to compute the initial hidden state     #
         #     from the image features. This should produce an array of shape (N, H)#
         # (2) Use a word embedding layer to transform the words in captions_in     #
-        #     from indices to vectors, giving an array of shape (N, T, W).         #
+        #     from indices to vectors, giving an array of shape (N, T, V).         #
         # (3) Use either a vanilla RNN or LSTM (depending on self.cell_type) to    #
         #     process the sequence of input word vectors and produce hidden state  #
         #     vectors for all timesteps, producing an array of shape (N, T, H).    #
@@ -140,14 +140,29 @@ class CaptioningRNN(object):
         # Step 1
         h0 = features.dot(W_proj) + b_proj 
         # Step 2
-        out_word, cache_word = word_embedding_forward(captions, W_embed)
+        out_word, cache_word = word_embedding_forward(captions_in, W_embed)
         # Step 3
         if self.cell_type == 'rnn':
             h, cache_rnn = rnn_forward(out_word, h0, Wx, Wh, b)
-            print(h.shape)
         elif self.cell_type == 'lstm':
             pass
         # Step 4
+        out, cache = temporal_affine_forward(h, W_vocab, b_vocab)
+        # Step 5
+        loss, dx = temporal_softmax_loss(out, captions_out, mask, verbose=False)
+        
+        # Step 4 backward
+        dh, grads['W_vocab'], grads['b_vocab'] = temporal_affine_backward(dx, cache)
+        # Step 3 backward
+        if self.cell_type == 'rnn':
+            dout_word, dh0, grads['Wx'], grads['Wh'], grads['b'] = rnn_backward(dh, cache_rnn)
+        elif self.cell_type == 'lstm':
+            pass
+        # Step 2 backward
+        grads['W_embed'] = word_embedding_backward(dout_word, cache_word)
+        # Step 1 backward
+        grads['W_proj'] = features.T.dot(dh0)#/features.shape[0]
+        grads['b_proj'] = np.sum(dh0, axis=0)
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
@@ -209,7 +224,24 @@ class CaptioningRNN(object):
         # functions; you'll need to call rnn_step_forward or lstm_step_forward in #
         # a loop.                                                                 #
         ###########################################################################
-        pass
+        prev_h = features.dot(W_proj) + b_proj;
+        # Step 1
+        start = np.ones((N, 1), dtype=int) * self._start
+        out_word, _ = word_embedding_forward(start, W_embed)
+        for t in range(max_length):
+            # Step 2
+            if self.cell_type == 'rnn':
+                next_h, _ = rnn_step_forward(out_word, prev_h, Wx, Wh, b)
+            elif self.cell_type == 'lstm':
+                pass
+            # Step 3
+            scores, _ = next_h.dot(W_vocab) + (b_vocab)
+            # Step 4
+            word_index = np.argmax(scores, axis=1).reshape(N, 1)
+            captions[:, t:t+1] = word_index
+            out_word, _ = word_embedding_forward(word_index, W_embed)
+            prev_h = next_h
+            
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
