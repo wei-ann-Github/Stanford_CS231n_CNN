@@ -238,7 +238,17 @@ class CaptioningRNN(object):
             scores, _ = next_h.dot(W_vocab) + (b_vocab)
             # Step 4
             word_index = np.argmax(scores, axis=1).reshape(N, 1)
-            captions[:, t:t+1] = word_index
+            
+            # mask for checking whether the last word generate is self._end.
+            # This mask is then used to decide whether to insert the word index into caption,
+            # or that captioning has ended, hence insert the end token, self._end in to the remaining indices.
+            mask = (captions[:, t-1] != self._end).reshape(N, 1)
+            captions[:, t:t+1] = word_index * mask + (1 - mask) * self._end
+            
+            # For early exit of inference.
+            # If the last word of all the captions is self._end.
+            if np.all(captions[:, t] == self._end):
+                break
             out_word, _ = word_embedding_forward(word_index, W_embed)
             prev_h = next_h
             
