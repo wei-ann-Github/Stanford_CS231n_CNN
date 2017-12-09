@@ -66,12 +66,12 @@ def rnn_step_backward(dnext_h, cache):
     # of the output value from tanh.                                             #
     ##############################################################################
     x, Wx, prev_h, Wh, next_z = cache
-    dtanh = (1 - np.tanh(next_z)**2) * dnext_h
-    dx = dtanh.dot(Wx.T)
-    dprev_h = dtanh.dot(Wh.T)
-    dWx = x.T.dot(dtanh)
-    dWh = prev_h.T.dot(dtanh)
-    db = np.sum(dtanh, axis=0)
+    dnext_z = (1 - np.tanh(next_z)**2) * dnext_h
+    dx = dnext_z.dot(Wx.T)
+    dprev_h = dnext_z.dot(Wh.T)
+    dWx = x.T.dot(dnext_z)
+    dWh = prev_h.T.dot(dnext_z)
+    db = np.sum(dnext_z, axis=0)
     ##############################################################################
     #                               END OF YOUR CODE                             #
     ##############################################################################
@@ -108,9 +108,10 @@ def rnn_forward(x, h0, Wx, Wh, b):
     cache = []
     prev_h = h0
     for t in range(T):
-        prev_h, tmp_cache = rnn_step_forward(x[:, t, :], prev_h, Wx, Wh, b)
+        next_h, tmp_cache = rnn_step_forward(x[:, t, :], prev_h, Wx, Wh, b)
         cache.append(tmp_cache)
-        h[:, t, :] = prev_h
+        h[:, t, :] = next_h
+        prev_h = next_h
     ##############################################################################
     #                               END OF YOUR CODE                             #
     ##############################################################################
@@ -140,15 +141,16 @@ def rnn_backward(dh, cache):
     N, T, H = dh.shape
     D = cache[0][0].shape[-1]
     
-    dx = np.zeros((N, T, D)); dh0 = np.zeros((N, H));
+    dx = np.zeros((N, T, D)); dprev_h = np.zeros((N, H));
     dWx = np.zeros((D, H)); dWh = np.zeros((H, H)); db = np.zeros((H))
     
     for t in range(T-1, -1, -1):
-        dnext_h = dh[:, t, :] + dh0
-        dx[:, t, :], dh0, dWx_tmp, dWh_tmp, db_tmp = rnn_step_backward(dnext_h, cache[t])
+        dnext_h = dh[:, t, :] + dprev_h
+        dx[:, t, :], dprev_h, dWx_tmp, dWh_tmp, db_tmp = rnn_step_backward(dnext_h, cache[t])
         dWx += dWx_tmp
         dWh += dWh_tmp
         db += db_tmp
+    dh0 = dprev_h
     ##############################################################################
     #                               END OF YOUR CODE                             #
     ##############################################################################
@@ -350,14 +352,17 @@ def lstm_forward(x, h0, Wx, Wh, b):
     h = np.zeros((N, T, H))
     cache = []
     prev_h = h0
+    prev_c = np.zeros((N, H))
     for t in range(T):
-        next_h, next_c, next_cache = lstm_step_forward(x, prev_h, prev_c, Wx, Wh, b)
+        next_h, next_c, next_cache = lstm_step_forward(x[:, t, :], prev_h, prev_c, Wx, Wh, b)
         
+        # store next_cache into cache
+        cache.append(next_cache)
+        
+        # prepare for the next interation and store next_h into h        
         h[:, t, :] = next_h
         prev_h = next_h
         prev_c = next_c
-        
-        cache.append(next_cache)
     ##############################################################################
     #                               END OF YOUR CODE                             #
     ##############################################################################
@@ -385,7 +390,31 @@ def lstm_backward(dh, cache):
     # TODO: Implement the backward pass for an LSTM over an entire timeseries.  #
     # You should use the lstm_step_backward function that you just defined.     #
     #############################################################################
-    pass
+    N, T, H = dh.shape
+
+    x, _, _, Wx, Wh, b, _, _, _, _, _, _ = cache[0]
+    _, D = x.shape
+    
+    dnext_c = np.zeros((N, H))
+    dnext_h  = np.zeros_like(dh[:,0,:])
+    dx = np.zeros((N, T, D))
+    dWx = np.zeros_like(Wx)
+    dWh = np.zeros_like(Wh)
+    db = np.zeros_like(b)
+    
+    for t in range(T-1, -1, -1):
+        dnext_h += dh[:, t, :]; # dnext_h is the summation of dh from the inference layer, 
+                                # and dh from the next lstm layer
+        dx[:, t, :], dprev_h, dprev_c, dprev_Wx, dprev_Wh, dprev_b = lstm_step_backward(dnext_h, dnext_c, cache[t])
+        
+        # update gradients for the  next iteration
+        dnext_h = dprev_h
+        dnext_c = dprev_c
+        dWx += dprev_Wx
+        dWh += dprev_Wh
+        db += dprev_b
+        
+    dh0 = dprev_h
     ##############################################################################
     #                               END OF YOUR CODE                             #
     ##############################################################################

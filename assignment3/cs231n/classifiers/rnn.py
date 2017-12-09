@@ -145,7 +145,7 @@ class CaptioningRNN(object):
         if self.cell_type == 'rnn':
             h, cache_rnn = rnn_forward(out_word, h0, Wx, Wh, b)
         elif self.cell_type == 'lstm':
-            pass
+            h, cache_lstm = lstm_forward(out_word, h0, Wx, Wh, b)
         # Step 4
         out, cache = temporal_affine_forward(h, W_vocab, b_vocab)
         # Step 5
@@ -157,7 +157,7 @@ class CaptioningRNN(object):
         if self.cell_type == 'rnn':
             dout_word, dh0, grads['Wx'], grads['Wh'], grads['b'] = rnn_backward(dh, cache_rnn)
         elif self.cell_type == 'lstm':
-            pass
+            dout_word, dh0, grads['Wx'], grads['Wh'], grads['b'] = lstm_backward(dh, cache_lstm)
         # Step 2 backward
         grads['W_embed'] = word_embedding_backward(dout_word, cache_word)
         # Step 1 backward
@@ -225,17 +225,19 @@ class CaptioningRNN(object):
         # a loop.                                                                 #
         ###########################################################################
         prev_h = features.dot(W_proj) + b_proj;
+        prev_c = np.zeros_like(prev_h);
         # Step 1
         start = np.ones((N, 1), dtype=int) * self._start
         out_word, _ = word_embedding_forward(start, W_embed)
         for t in range(max_length):
             # Step 2
             if self.cell_type == 'rnn':
-                next_h, _ = rnn_step_forward(out_word, prev_h, Wx, Wh, b)
+                next_h, _ = rnn_step_forward(out_word[:, 0, :], prev_h, Wx, Wh, b)
             elif self.cell_type == 'lstm':
-                pass
+                next_h, next_c, cache = lstm_step_forward(out_word[:, 0, :], prev_h, prev_c, Wx, Wh, b)
+                prev_c = next_c; 
             # Step 3
-            scores, _ = next_h.dot(W_vocab) + (b_vocab)
+            scores = next_h.dot(W_vocab) + (b_vocab)
             # Step 4
             word_index = np.argmax(scores, axis=1).reshape(N, 1)
             
@@ -251,7 +253,6 @@ class CaptioningRNN(object):
                 break
             out_word, _ = word_embedding_forward(word_index, W_embed)
             prev_h = next_h
-            
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
