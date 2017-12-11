@@ -16,6 +16,8 @@ This assignment consists of 5 exercises.
 * Train and tune an LSTM model to perform the image captioning task.
 
 **Exercise on Network Visualization: Saliency Maps, Class Visualization, and Fooling Images**:
+* Introduced to Squeezenet and its architecture.
+* 
 
 **Exercise on Style Transfer**:
 

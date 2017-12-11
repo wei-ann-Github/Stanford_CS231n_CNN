@@ -5,7 +5,10 @@ from builtins import range
 import urllib.request, urllib.error, urllib.parse, os, tempfile
 
 import numpy as np
-from skimage.transform import resize as imresize
+try:
+    from skimage.transform import resize as imresize
+except:
+    from scipy.misc import imresize
 from scipy.ndimage import imread
 
 """
