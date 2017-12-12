@@ -17,7 +17,7 @@ This assignment consists of 5 exercises.
 
 **Exercise on Network Visualization: Saliency Maps, Class Visualization, and Fooling Images**:
 * Introduced to Squeezenet and its architecture.
-* 
+* Build a Saliency Map for each sample image to visualize which image pixel is influential in affecting the model's prediction.
 
 **Exercise on Style Transfer**:
 
