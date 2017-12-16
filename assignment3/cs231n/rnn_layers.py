@@ -359,8 +359,10 @@ def lstm_forward(x, h0, Wx, Wh, b):
         # store next_cache into cache
         cache.append(next_cache)
         
-        # prepare for the next interation and store next_h into h        
+        # store next_h into h
         h[:, t, :] = next_h
+        
+        # prepare for the next interation
         prev_h = next_h
         prev_c = next_c
     ##############################################################################
@@ -402,6 +404,7 @@ def lstm_backward(dh, cache):
     dWh = np.zeros_like(Wh)
     db = np.zeros_like(b)
     
+    # going back in time from later time steps to the earlier time step.
     for t in range(T-1, -1, -1):
         dnext_h += dh[:, t, :]; # dnext_h is the summation of dh from the inference layer, 
                                 # and dh from the next lstm layer
@@ -410,6 +413,7 @@ def lstm_backward(dh, cache):
         # update gradients for the  next iteration
         dnext_h = dprev_h
         dnext_c = dprev_c
+        # dWx, dWh and db in the earlier time step is an accumulation of the errors of the later time steps.
         dWx += dprev_Wx
         dWh += dprev_Wh
         db += dprev_b

@@ -18,6 +18,8 @@ This assignment consists of 5 exercises.
 **Exercise on Network Visualization: Saliency Maps, Class Visualization, and Fooling Images**:
 * Introduced to Squeezenet and its architecture.
 * Build a Saliency Map for each sample image to visualize which image pixel is influential in affecting the model's prediction.
+* How to modify images that can fool a pretrained CNN to make wrong prediction of the images' class, when to the human eye, the images looked the same.
+* Generate "images" of a class in the pretrained CNN. The "images" generated are generally not very clear, to the human eye, what the network is trying to depict.
 
 **Exercise on Style Transfer**:
 
