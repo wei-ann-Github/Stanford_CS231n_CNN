@@ -1,5 +1,5 @@
 Cython==0.23.4
-Jinja2==2.8
+Jinja2==2.8.1
 MarkupSafe==0.23
 Pillow==3.0.0
 Pygments==2.0.2
@@ -11,7 +11,6 @@ certifi==2015.11.20.1
 cycler==0.10.0
 decorator==4.0.6
 future==0.16.0
-
 ipykernel==4.2.2
 ipython==4.0.1
 ipython-genutils==0.1.0
@@ -25,7 +24,7 @@ matplotlib==2.0.0
 mistune==0.7.1
 nbconvert==4.1.0
 nbformat==4.0.1
-notebook==4.0.6
+notebook==5.7.8
 numpy==1.10.4
 path.py==8.1.2
 pexpect==4.0.1
